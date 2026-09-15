@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Gestión de Tareas — Unidad 7</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: #fff;
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        header h1 { font-size: 1.6rem; font-weight: 600; }
+        header span { font-size: 0.9rem; opacity: 0.8; }
+
+        main { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+
+        /* Alertas */
+        .alert {
+            padding: 0.85rem 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1.25rem;
+            font-weight: 500;
+        }
+        .alert-success { background: #d4edda; color: #155724; border-left: 4px solid #28a745; }
+        .alert-error   { background: #f8d7da; color: #721c24; border-left: 4px solid #dc3545; }
+
+        /* Barra de acciones */
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 1.5rem;
+            background: #fff;
+            padding: 1rem 1.25rem;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        }
+
+        .filter-group { display: flex; flex-direction: column; gap: 0.3rem; }
+        .filter-group label { font-size: 0.8rem; color: #555; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        select {
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #ccd;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            background: #fafafa;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        select:focus { outline: none; border-color: #1a73e8; }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.55rem 1.1rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary  { background: #1a73e8; color: #fff; }
+        .btn-primary:hover { background: #1558b0; }
+        .btn-success  { background: #34a853; color: #fff; }
+        .btn-success:hover { background: #2d8f46; }
+        .btn-warning  { background: #fbbc04; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .btn-danger   { background: #ea4335; color: #fff; }
+        .btn-danger:hover { background: #c62828; }
+        .btn-sm { padding: 0.35rem 0.7rem; font-size: 0.8rem; }
+
+        /* Tabla */
+        .table-wrapper {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: #1a73e8; color: #fff; }
+        thead th { padding: 0.85rem 1rem; text-align: left; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        tbody tr { border-bottom: 1px solid #eee; transition: background 0.15s; }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: #f5f9ff; }
+        tbody td { padding: 0.8rem 1rem; font-size: 0.9rem; vertical-align: middle; }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .badge-alta   { background: #fde8e8; color: #c0392b; }
+        .badge-media  { background: #fff3cd; color: #856404; }
+        .badge-baja   { background: #d4edda; color: #155724; }
+        .badge-ok     { background: #d4edda; color: #155724; }
+        .badge-pend   { background: #e2e3e5; color: #495057; }
+
+        .acciones-cell { white-space: nowrap; }
+        .acciones-cell form { display: inline; }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #888;
+            font-size: 1rem;
+        }
+        .empty-state span { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; }
+
+        @media (max-width: 700px) {
+            thead { display: none; }
+            tbody tr { display: block; padding: 0.5rem; border: 1px solid #ddd; margin-bottom: 0.5rem; border-radius: 8px; }
+            tbody td { display: flex; justify-content: space-between; padding: 0.4rem 0.6rem; font-size: 0.85rem; }
+            tbody td::before { content: attr(data-label); font-weight: 600; color: #555; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>&#x1F4CB; Gestión de Tareas</h1>
+    <span>Unidad 7 — Spring Boot MVC</span>
+</header>
+
+<main>
+
+    <!-- Mensajes flash -->
+    <div th:if="${mensajeExito}" class="alert alert-success" th:text="${mensajeExito}"></div>
+    <div th:if="${mensajeError}"  class="alert alert-error"   th:text="${mensajeError}"></div>
+
+    <!-- Barra de filtros y acción nueva -->
+    <div class="toolbar">
+        <div class="filter-group">
+            <label for="filtroPrioridad">Prioridad</label>
+            <select id="filtroPrioridad" name="prioridad"
+                    onchange="aplicarFiltros()">
+                <option value="">Todas</option>
+                <option th:each="p : ${prioridades}"
+                        th:value="${p}"
+                        th:text="${p}"
+                        th:selected="${filtroPrioridad == p}">
+                </option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="filtroEstado">Estado</label>
+            <select id="filtroEstado" name="completada"
+                    onchange="aplicarFiltros()">
+                <option value="">Todos</option>
+                <option value="false" th:selected="${filtroCompletada != null and !filtroCompletada}">Pendiente</option>
+                <option value="true"  th:selected="${filtroCompletada != null and filtroCompletada}">Completada</option>
+            </select>
+        </div>
+
+        <a href="/tareas/nueva" class="btn btn-primary" style="margin-left:auto;">
+            &#xFF0B; Nueva tarea
+        </a>
+    </div>
+
+    <!-- Tabla de tareas -->
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Título</th>
+                    <th>Descripción</th>
+                    <th>Prioridad</th>
+                    <th>Fecha límite</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${#lists.isEmpty(tareas)}">
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <span>&#x1F50D;</span>
+                            No hay tareas que coincidan con los filtros seleccionados.
+                        </div>
+                    </td>
+                </tr>
+                <tr th:each="tarea : ${tareas}">
+                    <td data-label="#" th:text="${tarea.id}"></td>
+                    <td data-label="Título" th:text="${tarea.titulo}"></td>
+                    <td data-label="Descripción" th:text="${tarea.descripcion}"></td>
+                    <td data-label="Prioridad">
+                        <span class="badge"
+                              th:classappend="${tarea.prioridad.name() == 'ALTA' ? 'badge-alta' :
+                                               tarea.prioridad.name() == 'MEDIA' ? 'badge-media' : 'badge-baja'}"
+                              th:text="${tarea.prioridad}">
+                        </span>
+                    </td>
+                    <td data-label="Fecha límite" th:text="${#temporals.format(tarea.fechaLimite, 'dd/MM/yyyy')}"></td>
+                    <td data-label="Estado">
+                        <span class="badge"
+                              th:classappend="${tarea.completada ? 'badge-ok' : 'badge-pend'}"
+                              th:text="${tarea.completada ? 'Completada' : 'Pendiente'}">
+                        </span>
+                    </td>
+                    <td data-label="Acciones" class="acciones-cell">
+                        <!-- Editar -->
+                        <a th:href="@{/tareas/{id}/editar(id=${tarea.id})}"
+                           class="btn btn-warning btn-sm"
+                           th:if="${!tarea.completada}">Editar</a>
+
+                        <!-- Completar (POST para evitar efectos secundarios por GET) -->
+                        <form th:action="@{/tareas/{id}/completar(id=${tarea.id})}" method="post"
+                              th:if="${!tarea.completada}"
+                              style="display:inline;">
+                            <button type="submit" class="btn btn-success btn-sm">&#x2713; Completar</button>
+                        </form>
+
+                        <!-- Eliminar (POST para evitar efectos secundarios por GET) -->
+                        <form th:action="@{/tareas/{id}/eliminar(id=${tarea.id})}" method="post"
+                              style="display:inline;"
+                              onsubmit="return confirm('¿Deseas eliminar esta tarea de forma permanente?')">
+                            <button type="submit" class="btn btn-danger btn-sm">&#x1F5D1; Eliminar</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</main>
+
+<script>
+    function aplicarFiltros() {
+        const prioridad = document.getElementById('filtroPrioridad').value;
+        const completada = document.getElementById('filtroEstado').value;
+        const params = new URLSearchParams();
+        if (prioridad) params.set('prioridad', prioridad);
+        if (completada !== '') params.set('completada', completada);
+        window.location.href = '/tareas' + (params.toString() ? '?' + params.toString() : '');
+    }
+</script>
+
+</body>
+</html>

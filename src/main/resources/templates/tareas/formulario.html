@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title th:text="${modoEdicion} ? 'Editar Tarea — Unidad 7' : 'Nueva Tarea — Unidad 7'">Formulario</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f2f5;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1a73e8, #0d47a1);
+            color: #fff;
+            padding: 1.25rem 2rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        header h1 { font-size: 1.6rem; font-weight: 600; }
+
+        main { max-width: 640px; margin: 2.5rem auto; padding: 0 1rem; }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 2rem 2.5rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #1a73e8;
+            margin-bottom: 1.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-group { margin-bottom: 1.25rem; }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 0.4rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 0.65rem 0.9rem;
+            border: 1.5px solid #ccd;
+            border-radius: 7px;
+            font-size: 0.95rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            background: #fafafa;
+        }
+
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 3px rgba(26,115,232,0.12);
+            background: #fff;
+        }
+
+        input.is-invalid, textarea.is-invalid, select.is-invalid {
+            border-color: #dc3545;
+            box-shadow: 0 0 0 3px rgba(220,53,69,0.1);
+        }
+
+        textarea { resize: vertical; min-height: 100px; }
+
+        .error-msg {
+            display: block;
+            margin-top: 0.35rem;
+            font-size: 0.8rem;
+            color: #dc3545;
+            font-weight: 500;
+        }
+
+        .char-hint {
+            display: block;
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 0.25rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+            padding-top: 1.25rem;
+            border-top: 1px solid #eee;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.6rem 1.3rem;
+            border: none;
+            border-radius: 7px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background 0.2s, transform 0.1s;
+        }
+        .btn:active { transform: scale(0.97); }
+        .btn-primary  { background: #1a73e8; color: #fff; }
+        .btn-primary:hover { background: #1558b0; }
+        .btn-secondary { background: #e8eaed; color: #333; }
+        .btn-secondary:hover { background: #d2d4d7; }
+
+        .required-note {
+            font-size: 0.78rem;
+            color: #888;
+            margin-bottom: 1.5rem;
+        }
+        .required-note span { color: #dc3545; }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1 th:text="${modoEdicion} ? '&#x270F;&#xFE0F; Editar Tarea' : '&#x1F195; Nueva Tarea'">Formulario</h1>
+</header>
+
+<main>
+    <div class="card">
+        <div class="card-title">
+            <span th:text="${modoEdicion} ? '&#x270F;&#xFE0F;' : '&#x1F4CC;'">&#x1F4CC;</span>
+            <span th:text="${modoEdicion} ? 'Modificar datos de la tarea' : 'Registrar nueva tarea'">Formulario</span>
+        </div>
+
+        <p class="required-note">Los campos marcados con <span>*</span> son obligatorios.</p>
+
+        <form th:action="@{/tareas/guardar}" th:object="${tarea}" method="post" novalidate>
+
+            <!-- Campo oculto para el ID (edición) -->
+            <input type="hidden" th:field="*{id}"/>
+
+            <!-- Título -->
+            <div class="form-group">
+                <label for="titulo">Título <span style="color:#dc3545">*</span></label>
+                <input type="text"
+                       id="titulo"
+                       th:field="*{titulo}"
+                       th:classappend="${#fields.hasErrors('titulo')} ? 'is-invalid' : ''"
+                       placeholder="Ej: Revisar informe de ventas"/>
+                <span class="char-hint">Entre 3 y 100 caracteres.</span>
+                <span class="error-msg"
+                      th:if="${#fields.hasErrors('titulo')}"
+                      th:errors="*{titulo}">Error de validación</span>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group">
+                <label for="descripcion">Descripción <span style="color:#dc3545">*</span></label>
+                <textarea id="descripcion"
+                          th:field="*{descripcion}"
+                          th:classappend="${#fields.hasErrors('descripcion')} ? 'is-invalid' : ''"
+                          placeholder="Describe el objetivo o los pasos de esta tarea..."></textarea>
+                <span class="char-hint">Máximo 500 caracteres.</span>
+                <span class="error-msg"
+                      th:if="${#fields.hasErrors('descripcion')}"
+                      th:errors="*{descripcion}">Error de validación</span>
+            </div>
+
+            <!-- Prioridad -->
+            <div class="form-group">
+                <label for="prioridad">Prioridad <span style="color:#dc3545">*</span></label>
+                <select id="prioridad"
+                        th:field="*{prioridad}"
+                        th:classappend="${#fields.hasErrors('prioridad')} ? 'is-invalid' : ''">
+                    <option value="">— Selecciona una prioridad —</option>
+                    <option th:each="p : ${prioridades}"
+                            th:value="${p}"
+                            th:text="${p}">
+                    </option>
+                </select>
+                <span class="error-msg"
+                      th:if="${#fields.hasErrors('prioridad')}"
+                      th:errors="*{prioridad}">Error de validación</span>
+            </div>
+
+            <!-- Fecha límite -->
+            <div class="form-group">
+                <label for="fechaLimite">Fecha límite <span style="color:#dc3545">*</span></label>
+                <input type="date"
+                       id="fechaLimite"
+                       th:field="*{fechaLimite}"
+                       th:classappend="${#fields.hasErrors('fechaLimite')} ? 'is-invalid' : ''"/>
+                <span class="char-hint">Debe ser hoy o una fecha futura.</span>
+                <span class="error-msg"
+                      th:if="${#fields.hasErrors('fechaLimite')}"
+                      th:errors="*{fechaLimite}">Error de validación</span>
+            </div>
+
+            <!-- Acciones -->
+            <div class="form-actions">
+                <a href="/tareas" class="btn btn-secondary">&#x2715; Cancelar</a>
+                <button type="submit" class="btn btn-primary">
+                    <span th:text="${modoEdicion} ? '&#x2705; Guardar cambios' : '&#x1F4BE; Crear tarea'">Guardar</span>
+                </button>
+            </div>
+
+        </form>
+    </div>
+</main>
+
+</body>
+</html>
